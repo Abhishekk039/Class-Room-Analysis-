@@ -1,400 +1,357 @@
 # 🎙️ Classroom Voice Analytics
 
-> **Offline-first AI system for classroom transcription, speaker analysis, and engagement insights.**
+> Offline-first classroom audio analysis system for transcription, interaction detection, speaker labeling, and engagement insights.
 
-Classroom Voice Analytics is an AI-powered backend system that converts classroom audio into **English transcripts, speaker-labeled conversation turns, and quantitative engagement metrics**.
+This project is a working MVP for analyzing classroom recordings and converting them into structured educational insights. The backend accepts uploaded audio, preprocesses it, transcribes speech, extracts classroom interactions, and calculates engagement metrics.
 
-The system is designed for environments where audio may contain **English, Hindi, or Hindi-English code-switching**, while keeping the core transcription pipeline local through `faster-whisper`.
-
----
-
-## 🚀 Key Features
-
-* 🎙️ **Automatic Speech Transcription** using `faster-whisper`
-* 🌐 **Multilingual Audio Support** with automatic language detection
-* 🔄 **Hindi → English Translation** for multilingual classroom recordings
-* 👨‍🏫 **Teacher / Student Speaker Classification**
-* ❓ **Automatic Question Detection**
-* 💬 **Student Response Detection**
-* 📊 **Classroom Engagement Metrics**
-* 🔇 **Silence Analysis**
-* 📝 **Automated Classroom Summary**
-* ⚡ **Background Audio Processing**
-* 💾 **Offline-first processing**
-* 🧪 **13 automated unit tests**
-* 🐳 **Docker support**
-* 🚀 **FastAPI REST API**
+The current system is designed for multilingual classroom speech, especially English, Hindi, and Hindi-English code-switching, while keeping the main processing local using faster-whisper and FFmpeg.
 
 ---
 
-# 🧠 System Overview
+## 📌 Current Status
 
-The system processes classroom recordings through a multi-stage pipeline:
+The project is currently in an MVP / prototype stage, but it already implements a real end-to-end pipeline:
+
+- Audio upload through FastAPI
+- FFmpeg-based preprocessing
+- VAD-based chunk generation
+- Parallel chunk transcription
+- Quality filtering and correction passes
+- Speaker-label heuristic
+- Question and response detection
+- Engagement metric calculation
+- Classroom summary generation
+- result caching and resumable processing
+
+This is a strong technical foundation, but it is not yet a production-grade classroom analytics platform.
+
+---
+
+## 🚀 What the System Does Today
+
+### 1. Audio preprocessing
+The backend standardizes uploaded recordings before transcription.
+
+Current implementation:
+
+- converts to mono
+- resamples to 16 kHz
+- normalizes volume
+- prepares clean audio for speech detection and ASR
+
+### 2. Speech transcription
+The transcription stage uses local whisper-based processing.
+
+Current implementation:
+
+- uses faster-whisper
+- supports local CPU transcription
+- supports configurable model size and compute settings
+- optionally falls back to Gemini-based ASR when configured
+- runs chunked transcription for long recordings
+
+### 3. VAD and chunking
+The system detects speech regions and splits long files into smaller segments for better handling.
+
+Current implementation:
+
+- VAD regions are used to build speech chunks
+- target chunk length is around 25 seconds
+- overlapping windows are added to avoid missing words at chunk boundaries
+- chunks are processed in parallel
+
+### 4. Parallel processing
+The pipeline is designed for long classroom recordings and does not transcribe the entire file as one single block.
+
+Current implementation:
+
+- stores temporary chunk files
+- uses ThreadPoolExecutor for chunk-level transcription
+- merges the results in chronological order
+- saves chunk-level cache data so interrupted processing can resume
+
+### 5. Correction and quality filtering
+After transcription, the project runs a quality pipeline to reduce common transcription issues.
+
+Current implementation:
+
+- removes repeated segments
+- catches suspicious or noisy outputs
+- applies correction logic based on context and domain vocabulary
+- improves transcript cleanliness before analytics
+
+### 6. Classroom analysis
+Once clean transcript text is available, the project computes classroom-related signals.
+
+Current implementation:
+
+- teacher vs student labeling using a duration heuristic
+- question detection
+- student response detection
+- talk time analysis
+- silence analysis
+- engagement metrics
+- summary generation
+
+### 7. API and persistence
+The API exposes the system to clients and maintains job state.
+
+Current implementation:
+
+- FastAPI backend
+- upload endpoint
+- status endpoint
+- analysis retrieval endpoint
+- results saved to storage/results
+- chunk cache for resumable processing
+
+---
+
+## ⏱️ Audio Processing Time: Current Reality
+
+At the moment, long classroom audio processing can take around 17 minutes on CPU-based setups, depending on:
+
+- audio length
+- CPU power
+- chosen Whisper model size
+- number of chunks
+- whether Gemini fallback is enabled
+- quality and correction stage cost
+- amount of speech activity in the recording
+
+This is not unusual for a local CPU transcription pipeline with multiple stages. In other words, the project is currently accurate and functional, but it is slower than a production real-time system.
+
+### Why it takes time
+
+The main factors are:
+
+- Whisper inference on CPU is relatively slow for long recordings
+- segmentation and chunk overlap create additional audio slicing
+- each chunk is processed individually
+- post-processing adds correction and analysis steps
+- full transcript quality checks are not free
+
+---
+
+## ⚡ What We Should Do to Make It Faster and Better
+
+The path forward is clear: the system should become faster without losing transcript quality.
+
+### Immediate performance improvements
+
+1. Optimize Whisper model choice
+   - use smaller or quantized model for faster inference when quality can remain acceptable
+   - tune model size based on classroom complexity
+
+2. Improve chunking efficiency
+   - reduce unnecessary overlap
+   - tune chunk length and VAD parameters for faster but still accurate transcription
+   - avoid excessive slicing for short or low-activity recordings
+
+3. Increase parallelism intelligently
+   - increase worker count for multi-core CPUs
+   - batch stronger processing where possible
+   - avoid oversubscription on low-resource machines
+
+4. Use GPU support where available
+   - if CUDA or GPU runtime is available, ASR speed improves substantially
+   - this is one of the biggest speed gains for the current setup
+
+5. Avoid redundant processing
+   - keep cache and resume logic stronger
+   - skip reprocessing unchanged segments and failed jobs more cleanly
+
+### Accuracy and quality improvements
+
+1. Replace heuristic diarization
+   - use pyannote.audio or speaker embedding-based diarization
+   - classify teacher/student more reliably than duration-only logic
+
+2. Improve multilingual handling
+   - improve Hindi and code-switch recognition quality
+   - add domain-specific vocabulary tuning for classroom subjects
+
+3. Strengthen correction logic
+   - use better confidence scoring
+   - improve context-based correction passes
+   - integrate more subject-aware language rules
+
+4. Add robust evaluation metrics
+   - compare transcription quality against reference transcripts
+   - track repeated phrase and hallucination rates
+
+---
+
+## 🧭 Future Scope and Roadmap
+
+The project has a clear path from MVP to production-ready classroom intelligence platform.
+
+### Phase 1 — Speed and Stability
+
+- optimize chunking overhead
+- tune Whisper configuration for CPU efficiency
+- improve cache and resume behavior
+- reduce processing time from ~17 minutes toward a more practical target
+- support more efficient background job execution
+
+### Phase 2 — Better Speech Understanding
+
+- replace heuristic speaker labels with true speaker diarization
+- integrate speaker embeddings and clustering
+- improve question detection quality
+- improve multilingual code-switch recognition
+- add better confidence and uncertainty scoring
+
+### Phase 3 — Classroom Intelligence
+
+- track teacher dominance, student participation, and interaction density across sessions
+- compare classroom sessions over time
+- provide historical trends for teacher engagement patterns
+- add better summary generation for classroom reports
+
+### Phase 4 — Product Platform
+
+- add database-backed persistence for sessions, transcripts, and metrics
+- add authentication and user roles
+- add analytics dashboard for teachers and administrators
+- add historical session comparisons and teacher/student reports
+- support batch processing for multiple recordings
+
+### Phase 5 — Real-time and Large-Scale Deployment
+
+- add near real-time or streaming audio analysis
+- support live classroom monitoring
+- deploy backend to cloud or edge infrastructure
+- enable scaling across multiple classrooms and sessions
+- integrate with LMS or classroom management systems
+
+---
+
+## 🏗️ Current Architecture
 
 ```text
-                    Classroom Audio
-                          │
-                          ▼
-                ┌───────────────────┐
-                │ Audio Upload API  │
-                └─────────┬─────────┘
-                          │
-                          ▼
-                ┌───────────────────┐
-                │ Audio Preprocessing│
-                │                   │
-                │ • Mono conversion │
-                │ • 16 kHz resample  │
-                │ • Noise reduction │
-                │ • Loudness normalize│
-                └─────────┬─────────┘
-                          │
-                          ▼
-                ┌───────────────────┐
-                │ Speech-to-Text    │
-                │  faster-whisper   │
-                └─────────┬─────────┘
-                          │
-                          ▼
-                ┌───────────────────┐
-                │ Speaker Analysis  │
-                │                   │
-                │ Teacher / Student │
-                └─────────┬─────────┘
-                          │
-                          ▼
-                ┌───────────────────┐
-                │ Conversation      │
-                │ Analysis          │
-                │                   │
-                │ • Questions       │
-                │ • Responses       │
-                │ • Silence         │
-                └─────────┬─────────┘
-                          │
-                          ▼
-                ┌───────────────────┐
-                │ Engagement Metrics│
-                └─────────┬─────────┘
-                          │
-                          ▼
-                ┌───────────────────┐
-                │ Classroom Summary │
-                └───────────────────┘
+Classroom audio
+      ↓
+Upload API
+      ↓
+Preprocessing (FFmpeg)
+      ↓
+VAD + Chunking
+      ↓
+Parallel Transcription
+      ↓
+Quality / Correction Layer
+      ↓
+Diarization Heuristic
+      ↓
+Question / Response Analysis
+      ↓
+Engagement Metrics
+      ↓
+Summary Generation
+      ↓
+Storage / API Output
 ```
 
 ---
 
-# 📊 Engagement Analytics
+## 🧩 Current Implementation Details
 
-The MVP calculates three primary engagement indicators.
+This project already includes the following components:
 
-| Metric                              | Formula                                                      | Interpretation                                           |
-| ----------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------- |
-| **Teacher Dominance Ratio**         | `teacher_talk_time / total_talk_time`                        | Measures how much of the session is teacher-led          |
-| **Student Participation Indicator** | `student_turns / total_turns`                                | Measures the proportion of speaking turns from students  |
-| **Interaction Density**             | `(teacher_questions + student_responses) / duration_minutes` | Measures the frequency of question-response interactions |
-
-### Teacher Dominance Ratio
-
-```text
-> 0.70  → Lecture-heavy
-0.40–0.70 → Mixed interaction
-< 0.40  → Discussion-heavy
-```
-
-### Student Participation
-
-A higher value indicates that a greater proportion of speaking turns are attributed to students.
-
-### Interaction Density
-
-A higher value indicates more frequent back-and-forth interaction between the teacher and students.
+- FastAPI backend for audio upload and status tracking
+- FFmpeg preprocessing pipeline
+- VAD-based segmentation logic
+- 25-second chunk generation with overlap
+- ThreadPoolExecutor parallel chunk processing
+- local faster-whisper transcription
+- optional Gemini ASR as a fallback or hybrid path
+- stage-2 correction pipeline
+- quality checks for repetitive or suspicious outputs
+- simple teacher/student heuristic labeling
+- metrics for participation and interaction density
+- summary generation for classroom sessions
+- caching of chunk outputs to disk
 
 ---
 
-# 🧩 Detection Pipeline
+## 📊 Current Detection Logic
 
-## 1. Audio Preprocessing
+### Teacher vs student labeling
+The current model uses a simple heuristic:
 
-Incoming recordings are processed using `ffmpeg`.
+- longer speech segments are treated as teacher speech
+- shorter segments are treated as student speech
 
-The preprocessing stage:
+This is a practical MVP approximation, but it is not a true diarization system.
 
-* Converts audio to mono
-* Resamples to **16 kHz**
-* Applies noise reduction
-* Removes low/high-frequency noise
-* Normalizes loudness
+### Question detection
+Questions are inferred using a combination of:
 
-This provides a more consistent input for transcription.
+- question mark punctuation
+- question keywords such as what, why, when, who, how, can you, and similar patterns
 
----
-
-## 2. Speech Transcription
-
-The project uses **faster-whisper** for local speech recognition.
-
-The pipeline supports:
-
-```text
-English
-Hindi
-Hindi-English Code Switching
-```
-
-The system can automatically detect the spoken language and translate the resulting speech into English transcript text.
-
-For CPU-only systems:
-
-```text
-small → Quality-oriented default
-base  → Faster processing
-tiny  → Fastest / lowest resource usage
-```
-
-The model can be configured through the project configuration.
+### Response detection
+A student response is detected when a student segment occurs within a short time window after a teacher question.
 
 ---
 
-## 3. Speaker Classification
+## ⚠️ Current Limitations
 
-The MVP uses a documented heuristic to distinguish between teacher and student speech.
+The current version is intentionally an MVP and has clear constraints.
 
-```text
-Segment duration > 6 seconds
-        ↓
-     Teacher
+### 1. Speaker diarization is approximate
+The system is not using true speaker separation yet. It depends on duration-based assumptions.
 
-Segment duration ≤ 6 seconds
-        ↓
-     Student
-```
+### 2. Multilingual accuracy can vary
+Hindi, Hinglish, and noisy classroom speech can still cause errors in punctuation, phrasing, and turn labeling.
 
-### Why this approach?
+### 3. Processing can be slow on CPU
+The total time for some long recordings is around 17 minutes, which makes it less suitable for real-time or classroom-scale live processing today.
 
-Continuous explanatory speech is more likely to belong to the teacher, while shorter segments often represent student responses.
+### 4. Persistence is still basic
+Results are stored in local result folders, but a production database layer is still a future step.
 
-This is intentionally treated as an **approximation rather than true speaker diarization**.
-
-### Production Improvement
-
-A production implementation would replace this heuristic with speaker embeddings and clustering using technologies such as:
-
-```text
-pyannote.audio
-        +
-Speaker Embeddings
-        +
-Clustering
-```
+### 5. Some correction logic is heuristic
+It works well for common classroom patterns, but it is not a full language-quality system.
 
 ---
 
-# ❓ Question & Response Detection
+## 🔌 API Overview
 
-Question detection combines multiple signals.
-
-### Signal 1 — Punctuation
-
-The transcript segment ends with:
-
-```text
-?
-```
-
-### Signal 2 — Question Keywords
-
-The segment begins with words such as:
-
-```text
-what
-why
-when
-where
-who
-how
-can you
-could you
-do you
-```
-
-Combining both approaches improves detection when punctuation restoration is imperfect.
-
----
-
-## 💬 Student Response Detection
-
-A student segment is considered a response when it begins within **8 seconds** of a detected teacher question ending.
-
-```text
-Teacher Question
-       │
-       │ ≤ 8 seconds
-       ▼
-Student Speech
-       │
-       ▼
-Student Response
-```
-
----
-
-# 🏗️ Project Architecture
-
-```text
-Classroom-Voice-Analytics/
-│
-├── backend/
-│   │
-│   ├── app/
-│   │   ├── main.py
-│   │   │
-│   │   ├── api/
-│   │   │   └── routes.py
-│   │   │
-│   │   ├── services/
-│   │   │   ├── preprocessing.py
-│   │   │   ├── transcription.py
-│   │   │   ├── diarization.py
-│   │   │   ├── analysis.py
-│   │   │   ├── metrics.py
-│   │   │   └── summary.py
-│   │   │
-│   │   ├── models/
-│   │   │   └── schemas.py
-│   │   │
-│   │   └── core/
-│   │       └── config.py
-│   │
-│   ├── tests/
-│   │
-│   ├── Dockerfile
-│   └── requirements.txt
-│
-├── docker-compose.yml
-└── README.md
-```
-
----
-
-# 🔌 API
-
-The backend exposes a REST API through **FastAPI**.
-
-## Upload Audio
-
+### Upload audio
 ```http
 POST /api/upload
 ```
 
-Uploads a classroom audio recording and starts background processing.
+Uploads a classroom recording and starts processing.
 
-### Supported formats
-
-```text
-WAV
-MP3
-M4A
-MP4
-AAC
-FLAC
-OGG
-WebM
-```
-
-Maximum upload size:
-
-```text
-2 GiB
-```
-
-The upload endpoint immediately returns a `session_id`.
-
----
-
-## Check Processing Status
-
+### Check status
 ```http
 GET /api/status/{session_id}
 ```
 
-Example:
-
-```json
-{
-  "session_id": "bd691f39-414a-4049-ae19-58e380d109b5",
-  "status": "completed"
-}
-```
-
-Possible states include:
-
-```text
-processing
-completed
-failed
-```
-
----
-
-## Retrieve Analysis
-
+### Retrieve results
 ```http
 GET /api/analysis/{session_id}
 ```
 
-Once processing is complete, the analysis endpoint returns the generated transcript, speaker turns, detected interactions, metrics, and classroom summary.
+Supported audio input formats usually include:
+
+- WAV
+- MP3
+- M4A
+- MP4
+- AAC
+- FLAC
+- OGG
+- WebM
 
 ---
 
-# 🛠️ Technology Stack
+## 🧪 Testing
 
-| Technology         | Purpose                     |
-| ------------------ | --------------------------- |
-| **Python**         | Core backend and processing |
-| **FastAPI**        | REST API                    |
-| **faster-whisper** | Speech recognition          |
-| **FFmpeg**         | Audio preprocessing         |
-| **Pydantic**       | API schemas and validation  |
-| **Pytest**         | Automated testing           |
-| **Docker**         | Containerized deployment    |
-
----
-
-# 💻 Development Approach
-
-The project was developed **bottom-up**, starting with the highest-risk component and progressively integrating the system.
-
-### Phase 1 — Transcription
-
-Validated `faster-whisper` against sample classroom recordings.
-
-### Phase 2 — Analysis Logic
-
-Implemented speaker classification and question/response detection as independently testable functions.
-
-### Phase 3 — Engagement Metrics
-
-Implemented each metric as an isolated function with unit tests.
-
-### Phase 4 — API Integration
-
-Connected the validated processing pipeline to FastAPI endpoints.
-
-This approach reduced integration risk and made the core analysis logic easier to test independently.
-
----
-
-# 🧪 Testing
-
-The project currently contains:
-
-```text
-13 automated tests
-```
-
-The tests focus on pure logic and do not require audio files or model downloads.
+The project contains automated tests focused on core logic.
 
 Run:
 
@@ -403,86 +360,43 @@ cd backend
 pytest -v
 ```
 
-Example:
-
-```text
-13 passed
-```
+The system is designed so that important business logic can be validated independently of raw audio files or full model execution.
 
 ---
 
-# ⚙️ Installation
+## ⚙️ Setup
 
-## Prerequisites
+### Prerequisites
 
-Make sure the following are installed:
+- Python 3.10+
+- FFmpeg
+- Git
 
-* Python 3.10+
-* FFmpeg
-* Git
-
----
-
-## 1. Clone the Repository
+### Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/classroom-voice-analytics.git
-cd classroom-voice-analytics
-```
-
----
-
-## 2. Create a Virtual Environment
-
-### Windows
-
-```powershell
 cd backend
 python -m venv venv
+# Windows
 venv\Scripts\activate
-```
-
-### Linux / macOS
-
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-```
-
----
-
-## 3. Install Dependencies
-
-```bash
+# Linux / macOS
+# source venv/bin/activate
 pip install -r requirements.txt
 ```
 
----
-
-## 4. Start the API
+### Run API
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-The API will be available at:
-
-```text
-http://127.0.0.1:8000
-```
-
-Interactive API documentation:
+Then open:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
----
-
-# 🐳 Docker
-
-The application can also be started using Docker Compose:
+### Docker
 
 ```bash
 docker compose up --build
@@ -490,142 +404,26 @@ docker compose up --build
 
 ---
 
-# 🔄 Typical Workflow
+## 🔐 Privacy and Design Philosophy
 
-```text
-1. Upload classroom recording
-             ↓
-2. Receive session ID
-             ↓
-3. Audio preprocessing
-             ↓
-4. Speech transcription
-             ↓
-5. Speaker classification
-             ↓
-6. Question detection
-             ↓
-7. Response detection
-             ↓
-8. Engagement calculation
-             ↓
-9. Classroom summary
-             ↓
-10. Retrieve analysis through API
-```
+The project is designed with offline-first processing in mind. Audio is processed locally when possible, which keeps classroom recordings away from unnecessary third-party transmission.
+
+This makes the architecture suitable for privacy-sensitive educational environments, even though some setup and model-download steps still require initial access to packages or model files.
 
 ---
 
-# ⚠️ Current Limitations
+## ✅ Final Position
 
-This is an **MVP**, so several components are intentionally simplified.
+This project is already a strong MVP with a real end-to-end pipeline, but it still sits between a research prototype and a production classroom intelligence product.
 
-### Speaker Diarization
+The biggest current issue is processing time: long recordings can take around 17 minutes on CPU, mostly because of local Whisper transcription and chunk-based processing. The best path forward is to combine model optimization, GPU support, better diarization, and stronger multilingual accuracy while keeping the system privacy-conscious and locally deployable.
 
-The current system uses a duration-based heuristic instead of true speaker diarization.
-
-### Voice Activity Detection
-
-Silence is currently derived from transcript timing rather than being represented as a dedicated VAD segment.
-
-### Data Persistence
-
-Analysis results are currently maintained in memory rather than a persistent database.
-
-### Transcription Quality
-
-Noisy or heavily code-switched recordings can produce:
-
-* Repeated phrases
-* Incorrect words
-* Semantically inaccurate segments
-
-For example, a recording may occasionally repeat a phrase such as:
-
-```text
-"The copper is gone."
-```
-
-multiple times.
-
-This is primarily a speech-recognition/model-quality limitation and cannot be reliably solved through speaker-duration heuristics alone.
+This is a good foundation for a future classroom analytics platform, not just a one-off proof of concept.
 
 ---
 
-# 🔮 Future Roadmap
+## 👨‍💻 Author
 
-* [ ] Replace heuristic speaker detection with `pyannote.audio`
-* [ ] Add explicit Voice Activity Detection
-* [ ] Add persistent database storage
-* [ ] Add transcript confidence scores
-* [ ] Add speaker embeddings
-* [ ] Improve multilingual/code-switching accuracy
-* [ ] Add real-time audio processing
-* [ ] Add classroom analytics dashboard
-* [ ] Add historical session comparison
-* [ ] Add teacher/student participation trends
-* [ ] Add authentication and role-based access
-* [ ] Deploy production backend
+Abhishek
 
----
-
-# 🎯 Use Cases
-
-Classroom Voice Analytics can be extended for:
-
-* 🏫 Classroom engagement monitoring
-* 👨‍🏫 Teacher-led session analysis
-* 📚 Educational research
-* 📊 Student participation analysis
-* 🎙️ Automated lecture transcription
-* 🔎 Classroom interaction analysis
-* 📈 Long-term engagement tracking
-
----
-
-# 🔐 Privacy & Offline-First Design
-
-A key design goal of this MVP is **local audio processing**.
-
-Once the required Whisper model weights are available locally, transcription can run without sending classroom recordings to a third-party speech API.
-
-This makes the architecture suitable for environments where minimizing external audio-data transmission is important.
-
-> Note: the initial model download requires network access; subsequent inference can run locally with the cached model.
-
----
-
-# 📌 Assignment Context
-
-This project was developed as part of the **MakerGhat Full Stack Developer pre-work assignment — Task 1**.
-
-The implementation prioritizes:
-
-* Functional correctness
-* Clear engineering decisions
-* Testable business logic
-* Offline-first processing
-* Documented assumptions
-* Extensible architecture
-
----
-
-# 👨‍💻 Author
-
-**Abhishek**
-
-Built with Python, FastAPI, faster-whisper, FFmpeg, and a focus on practical AI-assisted classroom analytics.
-
----
-
-## ⭐ Project Status
-
-**Status:** MVP / Prototype
-
-The current implementation demonstrates the complete pipeline from:
-
-```text
-Audio → Transcription → Speaker Analysis → Engagement Metrics → Summary
-```
-
-while clearly documenting the areas that would require more sophisticated approaches for production deployment.
+Built with Python, FastAPI, faster-whisper, FFmpeg, and practical classroom AI workflows.
