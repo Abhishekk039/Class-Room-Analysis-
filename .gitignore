@@ -1,0 +1,69 @@
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local model and tool caches
+.cache/
+.cache-huggingface/
+.huggingface/
+models/
+
+# Audio uploads and generated analysis results
+storage/uploads/
+storage/results/
+backend/storage/uploads/
+backend/storage/results/
+*.wav
+*.mp3
+*.m4a
+*.mp4
+*.aac
+*.flac
+*.ogg
+*.webm
+
+# Node / frontend dependencies and build output
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+.npm/
+
+# Logs and local databases
+*.log
+*.sqlite
+*.sqlite3
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak

@@ -1,0 +1,126 @@
+﻿{
+    "session_id":  "bd691f39-414a-4049-ae19-58e380d109b5",
+    "transcript":  {
+                       "session_id":  "bd691f39-414a-4049-ae19-58e380d109b5",
+                       "duration_seconds":  3611.910438,
+                       "language":  "hi",
+                       "segments":  [
+                                        {
+                                            "start":  0.0,
+                                            "end":  11.45,
+                                            "text":  "Let\u0027s do a small activity I have a question for you Can you hear me?",
+                                            "speaker":  "teacher",
+                                            "is_question":  true
+                                        },
+                                        {
+                                            "start":  11.45,
+                                            "end":  15.45,
+                                            "text":  "No Can you hear me?",
+                                            "speaker":  "student",
+                                            "is_question":  false
+                                        },
+                                        {
+                                            "start":  15.45,
+                                            "end":  21.45,
+                                            "text":  "No Can you hear me?",
+                                            "speaker":  "teacher",
+                                            "is_question":  true
+                                        },
+                                        {
+                                            "start":  21.45,
+                                            "end":  27.45,
+                                            "text":  "No Can you hear me?",
+                                            "speaker":  "teacher",
+                                            "is_question":  true
+                                        },
+                                        {
+                                            "start":  27.45,
+                                            "end":  31.45,
+                                            "text":  "No Can you hear me?",
+                                            "speaker":  "student",
+                                            "is_question":  false
+                                        },
+                                        {
+                                            "start":  31.45,
+                                            "end":  35.54,
+                                            "text":  "No Can you hear me?",
+                                            "speaker":  "student",
+                                            "is_question":  false
+                                        },
+                                        {
+                                            "start":  35.54,
+                                            "end":  219.62,
+                                            "text":  "No",
+                                            "speaker":  "teacher",
+                                            "is_question":  false
+                                        },
+                                        {
+                                            "start":  219.62,
+                                            "end":  509.11,
+                                            "text":  "Let\u0027s go",
+                                            "speaker":  "teacher",
+                                            "is_question":  false
+                                        },
+                                        {
+                                            "start":  509.11,
+                                            "end":  511.43,
+                                            "text":  "What we will say is that",
+                                            "speaker":  "student",
+                                            "is_question":  false
+                                        },
+                                        {
+                                            "start":  511.43,
+                                            "end":  565.78,
+                                            "text":  "we are going back",
+                                            "speaker":  "teacher",
+                                            "is_question":  false
+                                        },
+                                        {
+                                            "start":  565.78,
+                                            "end":  649.06,
+                                            "text":  "Do you know what we will say?",
+                                            "speaker":  "teacher",
+                                            "is_question":  true
+                                        },
+                                        {
+                                            "start":  649.06,
+                                            "end":  1984.54,
+                                            "text":  "We are going back",
+                                            "speaker":  "teacher",
+                                            "is_question":  false
+                                        },
+                                        {
+                                            "start":  1984.54,
+                                            "end":  2117.8,
+                                            "text":  "You know the design",
+                                            "speaker":  "teacher",
+                                            "is_question":  false
+                                        },
+                                        {
+                                            "start":  2117.8,
+                                            "end":  3515.22,
+                                            "text":  "I have circled",
+                                            "speaker":  "teacher",
+                                            "is_question":  false
+                                        },
+                                        {
+                                            "start":  3515.22,
+                                            "end":  3524.58,
+                                            "text":  "I have circled my hand You have to do the same thing You have to do the same thing",
+                                            "speaker":  "teacher",
+                                            "is_question":  false
+                                        }
+                                    ]
+                   },
+    "metrics":  {
+                    "teacher_talk_time_seconds":  3510.17,
+                    "student_talk_time_seconds":  14.409999999999993,
+                    "silence_seconds":  87.33043799999996,
+                    "teacher_question_count":  4,
+                    "student_response_count":  0,
+                    "teacher_dominance_ratio":  0.9959115696054566,
+                    "student_participation_indicator":  0.26666666666666666,
+                    "interaction_density_per_minute":  0.06644683031866473
+                },
+    "summary":  "This was a teacher-led session with limited two-way exchange. Very few question-and-response exchanges were detected."
+}
