@@ -27,7 +27,7 @@ env/
 .cache/
 .cache-huggingface/
 .huggingface/
-models/
+/models/
 
 # Audio uploads and generated analysis results
 storage/uploads/
