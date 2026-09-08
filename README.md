@@ -1,5 +1,7 @@
 # 🎙️ Classroom Voice Analytics
 
+project-link : https://class-room-analysis.vercel.app/
+
 > Offline-first classroom audio analysis system for transcription, interaction detection, speaker labeling, and engagement insights.
 
 This project is a working MVP for analyzing classroom recordings and converting them into structured educational insights. The backend accepts uploaded audio, preprocesses it, transcribes speech, extracts classroom interactions, and calculates engagement metrics.
