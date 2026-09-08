@@ -99,7 +99,7 @@ CHUNK_OVERLAP_SECONDS = float(os.getenv("CHUNK_OVERLAP_SECONDS", "1.5"))
 
 # Number of worker threads for parallel chunk transcription.
 # Defaults to min(4, cpu_count) at runtime; override here for tuning.
-MAX_WORKERS = int(os.getenv("MAX_WORKERS", "4"))
+MAX_WORKERS = int(os.getenv("MAX_WORKERS", "1"))
 
 # ---------------------------------------------------------------------------
 # Diarization heuristic
